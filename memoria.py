@@ -1,13 +1,17 @@
 """
 Módulo de Memória - QUINTA-FEIRA
-Responsável por persistir dados do usuário em um arquivo JSON.
+Refatorado para persistência na pasta local do projeto.
 """
 import json
 import os
 
+# Define o diretório base automaticamente para portabilidade
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 class MemoriaAssistente:
-    def __init__(self, arquivo_json="memoria_quinta_feira.json"):
-        self.arquivo = arquivo_json
+    def __init__(self, nome_arquivo="memoria_quinta_feira.json"):
+        # Caminho dinâmico: o arquivo será salvo no mesmo diretório do script
+        self.arquivo = os.path.join(BASE_DIR, nome_arquivo)
         self.dados = self.carregar_memoria()
 
     def carregar_memoria(self):

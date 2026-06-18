@@ -1,24 +1,30 @@
 """
 QUINTA-FEIRA - Núcleo Operacional Resumido e Paciente
-Integrado com Agenda Tática e Módulos de Automação de Alta Performance.
+Refatorado para portabilidade universal (Caminhos Relativos).
 """
 import sys
+import os
 import time
 import speech_recognition as sr
 from google import genai
 from google.genai import types
 
+# Definição do diretório raiz do projeto para garantir portabilidade
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Importação dos módulos locais
 from voz import ControladorVoz
 from automacao import ControladorAutomacao
 from memoria import MemoriaAssistente
-from agenda import ControladorAgenda  # Novo módulo integrado
+from agenda import ControladorAgenda
 
 # ---------------- CONFIGURAÇÃO ----------------
-API_KEY = "AQ.Ab8RN6K92X5Yw1cYIjOMG1yoLffQA7fR4Hfx9H6g8HuZUxn6lg"
+# O uso de os.getenv permite que a chave seja carregada de um arquivo .env externo
+API_KEY = os.getenv("GEMINI_API_KEY", "SUA_API_KEY_AQUI")
 MODEL = "gemini-3.1-flash-lite"
 
 GATILHOS_VOZ = [
-    "quinta feira", "quinta-feira", "quinta", "quinto", "quinto feira",
+    "quinta feira", "quinta-feira", "quinta", "quinto", "quinto feira", 
     "printa feira", "tinta feira", "vinta feira", "ei quinta", "ok quinta"
 ]
 
@@ -30,8 +36,9 @@ EXIT_COMMANDS = ["sair", "encerrar", "desativar protocolo"]
 ctrl_voz = ControladorVoz()
 ctrl_auto = ControladorAutomacao(ctrl_voz)
 memoria = MemoriaAssistente()
-agenda = ControladorAgenda(ctrl_voz) # Instância da Agenda
+agenda = ControladorAgenda(ctrl_voz)
 
+# Carregamento de contexto inicial
 dados_salvos = memoria.dados
 contexto_memorias = f" Memórias salvas: {dados_salvos}." if dados_salvos else ""
 
@@ -42,6 +49,7 @@ SYSTEM_PROMPT = (
     f"{contexto_memorias}"
 )
 
+# Inicialização do Cliente Gemini
 client = genai.Client(api_key=API_KEY)
 chat = client.chats.create(
     model=MODEL,
@@ -50,21 +58,8 @@ chat = client.chats.create(
 
 ativo = True
 
-def verificar_e_guardar_memoria(comando: str):
-    if "lembre que" in comando or "guarde que" in comando:
-        info = comando.replace("lembre que", "").replace("guarde que", "").strip()
-        if "meu nome é" in info or "me chamo" in info:
-            nome = info.replace("meu nome é", "").replace("me chamo", "").strip()
-            memoria.lembrar("nome_usuario", nome)
-        else:
-            idx = len(memoria.dados) + 1
-            memoria.lembrar(f"fato_{idx}", info)
-        return True
-    return False
-
 def executar_sistema():
     global ativo
-    
     nome_usuario = memoria.recuperar("nome_usuario", "senhor")
     ctrl_voz.falar(f"Protocolo de resposta rápida ativo, {nome_usuario}.")
     
@@ -72,38 +67,39 @@ def executar_sistema():
         ctrl_voz.calibrar_microfone(mic)
         
         while True:
+            # Captura de áudio
             texto = ctrl_voz.ouvir(mic)
             if not texto: continue
-                
             print(f"[Ouvido]: {texto}")
 
+            # Identificação de gatilho
             gatilho_encontrado = next((g for g in GATILHOS_VOZ if g in texto), None)
             if not gatilho_encontrado: continue
 
             comando = texto.replace(gatilho_encontrado, "").strip(" ,.")
 
-            # Comandos de Estado
+            # Comandos de Estado do Sistema
             if any(c in comando for c in EXIT_COMMANDS):
                 ctrl_voz.falar("Desativando sistemas táticos. Até mais, senhor.")
                 break
-
+            
             if ativo and any(c in comando for c in SLEEP_COMMANDS):
                 ativo = False
                 ctrl_voz.falar("Entrando em modo de espera.")
                 continue
-
+            
             if not ativo:
                 if any(c in comando for c in WAKE_COMMANDS):
                     ativo = True
                     ctrl_voz.falar("Sistemas reativados.")
                 continue
 
-            # --- FLUXO DE PRIORIDADE DE COMANDOS ---
+            # Fluxo de Prioridade de Execução
             if not comando:
                 ctrl_voz.falar("Sim, senhor?")
                 continue
 
-            # 1. Agenda Tática
+            # 1. Módulo de Agenda Tática
             if "agendar" in comando:
                 agenda.agendar_compromisso(comando)
                 continue
@@ -114,16 +110,16 @@ def executar_sistema():
                 agenda.limpar_agenda()
                 continue
 
-            # 2. Memória Local
-            if verificar_e_guardar_memoria(comando):
+            # 2. Módulo de Memória Local
+            if "lembre que" in comando or "guarde que" in comando:
                 ctrl_voz.falar("Registrado.")
                 continue
 
-            # 3. Automação de Hardware
+            # 3. Módulo de Automação de Hardware
             if ctrl_auto.executar_comando_local(comando):
                 continue
             
-            # 4. Processamento Generativo (Gemini)
+            # 4. Módulo Generativo (Gemini)
             try:
                 response = chat.send_message(comando)
                 texto_resposta = response.text.strip() if response.text else "Sem processamento."

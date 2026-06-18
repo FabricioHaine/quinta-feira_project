@@ -1,0 +1,6 @@
+*.json
+/sons/
+/prints/
+*.txt
+.env
+__pycache__/
