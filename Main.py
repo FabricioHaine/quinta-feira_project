@@ -7,9 +7,8 @@ import os
 import time
 import json
 import datetime
+import requests
 import speech_recognition as sr
-from google import genai
-from google.genai import types
 
 # Importação dos módulos locais
 from voz import ControladorVoz
@@ -153,18 +152,77 @@ class SistemaAprendizado:
 
 aprendizado = SistemaAprendizado(memoria)
 
+# ---------------- CLIENTE GEMINI HTTP ----------------
+class GeminiClient:
+    def __init__(self, api_key):
+        self.api_key = api_key
+        self.base_url = "https://generativelanguage.googleapis.com/v1beta"
+        self.model = MODEL
+        self.history = []
+        self.system_instruction = SYSTEM_INSTRUCTION
+
+    def send_message(self, text):
+        contents = []
+        
+        # Adiciona system instruction no início
+        if self.system_instruction:
+            contents.append({
+                "role": "user",
+                "parts": [{"text": self.system_instruction}]
+            })
+            contents.append({
+                "role": "model", 
+                "parts": [{"text": "Entendido. Serei a Quinta-Feira."}]
+            })
+        
+        # Adiciona histórico
+        for msg in self.history[-10:]:
+            contents.append(msg)
+        
+        # Adiciona mensagem atual
+        contents.append({
+            "role": "user",
+            "parts": [{"text": text}]
+        })
+
+        url = f"{self.base_url}/models/{self.model}:generateContent?key={self.api_key}"
+        
+        payload = {
+            "contents": contents,
+            "generationConfig": {
+                "temperature": 0.4,
+                "maxOutputTokens": 200,
+            }
+        }
+
+        response = requests.post(url, json=payload, timeout=30)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "candidates" in data and len(data["candidates"]) > 0:
+                response_text = data["candidates"][0]["content"]["parts"][0]["text"]
+                
+                # Salva no histórico
+                self.history.append({"role": "user", "parts": [{"text": text}]})
+                self.history.append({"role": "model", "parts": [{"text": response_text}]})
+                
+                # Mantém histórico limitado
+                if len(self.history) > 20:
+                    self.history = self.history[-20:]
+                
+                return SimpleResponse(response_text)
+        
+        raise Exception(f"Erro na API: {response.status_code}")
+
+class SimpleResponse:
+    def __init__(self, text):
+        self.text = text
+
 # Inicialização do Cliente Gemini
 chat = None
 if API_KEY and API_KEY != "SUA_CHAVE_AQUI_AIza...":
     try:
-        client = genai.Client(api_key=API_KEY)
-        chat = client.chats.create(
-            model=MODEL,
-            config=types.GenerateContentConfig(
-                system_instruction=SYSTEM_INSTRUCTION,
-                temperature=0.4
-            )
-        )
+        chat = GeminiClient(API_KEY)
         print("[STATUS]: Módulo IA inicializado com sucesso.")
     except Exception as e:
         print(f"[Sistema]: Erro crítico ao conectar com Gemini: {e}")
