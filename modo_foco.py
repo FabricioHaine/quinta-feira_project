@@ -34,7 +34,7 @@ class ModoFoco:
             try:
                 with open(self.arquivo_foco, "r", encoding="utf-8") as f:
                     return json.load(f)
-            except:
+            except Exception:
                 return {"sessoes": [], "config": {"sites_bloqueados": [], "apps_bloqueados": []}}
         return {"sessoes": [], "config": {"sites_bloqueados": [], "apps_bloqueados": []}}
 

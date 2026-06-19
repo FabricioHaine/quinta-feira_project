@@ -36,7 +36,7 @@ class MonitorSistema:
                     for name, entries in temps.items():
                         if entries:
                             return entries[0].current
-        except:
+        except Exception:
             pass
         return None
 

@@ -35,7 +35,7 @@ class DetectorPresenca:
                 return True
             
             return False
-        except:
+        except Exception:
             return True
 
     def _monitorar_presenca(self):
@@ -56,7 +56,7 @@ class DetectorPresenca:
                         self.usuario_presente = False
                 
                 time.sleep(self.intervalo_verificacao)
-            except:
+            except Exception:
                 time.sleep(self.intervalo_verificacao)
 
     def _entrar_descanso(self):

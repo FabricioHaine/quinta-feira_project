@@ -22,7 +22,7 @@ class Integracoes:
             try:
                 with open(self.arquivo_config, "r", encoding="utf-8") as f:
                     return json.load(f)
-            except:
+            except Exception:
                 return {"webhooks": {}, "apps_favoritos": {}}
         return {"webhooks": {}, "apps_favoritos": {}}
 
@@ -38,7 +38,7 @@ class Integracoes:
             try:
                 with open(self.arquivo_notas, "r", encoding="utf-8") as f:
                     return json.load(f)
-            except:
+            except Exception:
                 return {"notas": []}
         return {"notas": []}
 
@@ -73,7 +73,7 @@ class Integracoes:
             else:
                 self.voz.falar("Erro ao enviar.")
                 return False
-        except:
+        except Exception:
             self.voz.falar("Erro de conexão.")
             return False
 
@@ -162,7 +162,7 @@ class Integracoes:
                 os.startfile(caminho)
                 self.voz.falar(f"Abrindo {nome}.")
                 return True
-            except:
+            except Exception:
                 self.voz.falar(f"Erro ao abrir {nome}.")
                 return False
 

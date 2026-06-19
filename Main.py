@@ -7,11 +7,12 @@ import os
 import time
 import json
 import datetime
+import base64
 import requests
 import speech_recognition as sr
 
 # Importação dos módulos locais
-from voz import ControladorVoz
+from voz import ControladorVoz, MicrofoneSoundDevice
 from automacao import ControladorAutomacao
 from memoria import MemoriaAssistente
 from agenda import ControladorAgenda
@@ -287,7 +288,7 @@ def executar_comando_novo(comando: str) -> bool:
         try:
             num = int(''.join(filter(str.isdigit, comando_lower)))
             secretario.concluir_tarefa(num)
-        except:
+        except Exception:
             secretario.listar_tarefas()
         return True
 
@@ -330,7 +331,7 @@ def executar_comando_novo(comando: str) -> bool:
     if "ativar foco" in comando_lower or "modo foco" in comando_lower:
         try:
             minutos = int(''.join(filter(str.isdigit, comando_lower))) or 25
-        except:
+        except Exception:
             minutos = 25
         modo_foco.ativar_modo_foco(minutos)
         return True
@@ -489,7 +490,7 @@ def executar_sistema():
     
     ctrl_voz.falar("Sistemas online. À disposição, senhor.")
 
-    with sr.Microphone() as mic:
+    with MicrofoneSoundDevice() as mic:
         ctrl_voz.calibrar_microfone(mic, duracao=2)
 
         while True:

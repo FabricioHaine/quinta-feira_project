@@ -20,7 +20,7 @@ class OtimizadorTokens:
             try:
                 with open(self.arquivo_cache, "r", encoding="utf-8") as f:
                     return json.load(f)
-            except:
+            except Exception:
                 return {}
         return {}
 
@@ -28,11 +28,11 @@ class OtimizadorTokens:
         try:
             with open(self.arquivo_cache, "w", encoding="utf-8") as f:
                 json.dump(self.cache, f, indent=4, ensure_ascii=False)
-        except:
+        except Exception:
             pass
 
     def _gerar_chave(self, texto):
-        return hashlib.md5(texto.lower().strip().encode()).hexdigest()
+        return hashlib.md5(texto.lower().strip().encode(), usedforsecurity=False).hexdigest()
 
     def obter_resposta_cache(self, pergunta):
         """Busca resposta no cache."""
@@ -68,7 +68,7 @@ class OtimizadorTokens:
             try:
                 if datetime.fromisoformat(entrada["timestamp"]) < datetime.now() - timedelta(days=7):
                     chaves_para_remover.append(chave)
-            except:
+            except Exception:
                 chaves_para_remover.append(chave)
         
         for chave in chaves_para_remover:

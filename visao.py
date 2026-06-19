@@ -36,7 +36,7 @@ class SistemaVisao:
             try:
                 with open(self.arquivo_estado, "r", encoding="utf-8") as f:
                     return json.load(f)
-            except:
+            except Exception:
                 return self._estado_padrao()
         return self._estado_padrao()
 
@@ -54,7 +54,7 @@ class SistemaVisao:
             self.estado["timestamp"] = datetime.now().isoformat()
             with open(self.arquivo_estado, "w", encoding="utf-8") as f:
                 json.dump(self.estado, f, indent=4, ensure_ascii=False)
-        except:
+        except Exception:
             pass
 
     def _obter_camera(self):
@@ -130,7 +130,7 @@ class SistemaVisao:
                     dados = base64.b64encode(f.read()).decode('utf-8')
                 os.remove(caminho)
                 return dados
-            except:
+            except Exception:
                 return None
         return None
 
@@ -143,7 +143,7 @@ class SistemaVisao:
                     dados = base64.b64encode(f.read()).decode('utf-8')
                 os.remove(caminho)
                 return dados
-            except:
+            except Exception:
                 return None
         return None
 
@@ -160,7 +160,7 @@ class SistemaVisao:
             if titulo:
                 self.estado["ultima_janela"] = titulo
                 return titulo
-        except:
+        except Exception:
             pass
         return self.estado.get("ultima_janela", "Desconhecido")
 
@@ -172,7 +172,7 @@ class SistemaVisao:
                 nome = proc.info['name']
                 if nome and nome not in apps and not nome.startswith('svchost'):
                     apps.append(nome)
-            except:
+            except Exception:
                 pass
         
         self.estado["apps_abertos"] = apps[:20]

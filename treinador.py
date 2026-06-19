@@ -83,7 +83,7 @@ class TreinadorConversas:
             try:
                 with open(self.arquivo_historico, "r", encoding="utf-8") as f:
                     return json.load(f)
-            except:
+            except Exception:
                 return {"treinos": [], "estatisticas": {}}
         return {"treinos": [], "estatisticas": {}}
 
@@ -144,7 +144,7 @@ Máximo 2-3 frases."""
             try:
                 response = chat.send_message(prompt)
                 return response.text.strip()
-            except:
+            except Exception:
                 return "Não consegui gerar uma resposta. Tente novamente."
 
         return "Modo offline. Não posso simular a conversa sem a IA."

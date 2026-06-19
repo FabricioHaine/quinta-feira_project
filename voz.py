@@ -1,6 +1,6 @@
 """
 Módulo de Voz - QUINTA-FEIRA
-Versão 2.0: Reconhecimento de voz melhorado com fuzzy matching e calibration inteligente.
+Versão 2.1: Reconhecimento de voz com sounddevice (compatível com Python 3.14).
 """
 import speech_recognition as sr
 import time
@@ -9,10 +9,79 @@ import asyncio
 import re
 import edge_tts
 import pyttsx3
+import numpy as np
+import sounddevice as sd
 from pygame import mixer
 from difflib import SequenceMatcher
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+class MicrofoneSoundDevice(sr.AudioSource):
+    """Substituto para sr.Microphone usando sounddevice (sem pyaudio)."""
+    def __init__(self, samplerate=16000, channels=1, chunk_size=1024):
+        self.samplerate = samplerate
+        self.channels = channels
+        self.chunk_size = chunk_size
+        self.CHUNK = chunk_size
+        self.SAMPLE_RATE = samplerate
+        self.SAMPLE_WIDTH = 2
+        self.stream = None
+        self._buffer = []
+
+    def __enter__(self):
+        self._buffer = []
+        self.stream = _AudioStreamSD(self)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.stream:
+            self.stream.close()
+            self.stream = None
+        return False
+
+
+class _AudioStreamSD:
+    """Stream compatível com a interface do speech_recognition."""
+    def __init__(self, mic):
+        self.mic = mic
+        self._closed = False
+        self._buffer = bytearray()
+        self._sd_stream = None
+        try:
+            self._sd_stream = sd.InputStream(
+                samplerate=mic.samplerate,
+                channels=mic.channels,
+                dtype='int16',
+                blocksize=mic.chunk_size,
+                callback=self._callback
+            )
+            self._sd_stream.start()
+        except Exception as e:
+            print(f"[Erro ao abrir microfone: {e}]")
+            raise
+
+    def _callback(self, indata, frames, time_info, status):
+        if not self._closed:
+            self._buffer.extend(indata.tobytes())
+
+    def read(self, num_frames):
+        bytes_per_frame = self.mic.SAMPLE_WIDTH * self.mic.channels
+        needed = num_frames * bytes_per_frame
+        while len(self._buffer) < needed and not self._closed:
+            time.sleep(0.01)
+        data = bytes(self._buffer[:needed])
+        self._buffer = self._buffer[needed:]
+        return data
+
+    def close(self):
+        self._closed = True
+        if self._sd_stream:
+            try:
+                self._sd_stream.stop()
+                self._sd_stream.close()
+            except Exception:
+                pass
+
 
 class ControladorVoz:
     def __init__(self):
@@ -64,7 +133,7 @@ class ControladorVoz:
         finally:
             if engine is not None:
                 try: engine.stop()
-                except: pass
+                except Exception: pass
                 del engine
 
     def falar(self, texto: str):
