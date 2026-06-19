@@ -62,7 +62,7 @@ class ControladorAgenda:
         descricao = descricao.strip().capitalize()
 
         if not descricao:
-            self.voz.falar("O senhor não especificou o compromisso.")
+            self.voz.falar("Especifique o compromisso.")
             return True
 
         if data_str not in self.compromissos: self.compromissos[data_str] = []
@@ -70,20 +70,20 @@ class ControladorAgenda:
         self._salvar_banco()
         
         data_falada = data_alvo.strftime("%d de %B")
-        self.voz.falar(f"Registrado senhor: {descricao} para o dia {data_falada}.")
+        self.voz.falar(f"Registrado: {descricao} para {data_falada}.")
         return True
 
     def listar_compromissos_hoje(self) -> bool:
         hoje_str = datetime.date.today().strftime("%Y-%m-%d")
         if hoje_str in self.compromissos and self.compromissos[hoje_str]:
             tarefas = ", ".join(self.compromissos[hoje_str])
-            self.voz.falar(f"O senhor possui os seguintes compromissos para hoje: {tarefas}.")
+            self.voz.falar(f"Compromissos de hoje: {tarefas}.")
         else:
-            self.voz.falar("Agenda limpa para o dia de hoje, senhor.")
+            self.voz.falar("Agenda limpa.")
         return True
 
     def limpar_agenda(self) -> bool:
         self.compromissos = {}
         self._salvar_banco()
-        self.voz.falar("Todos os bancos de dados da agenda foram resetados, senhor.")
+        self.voz.falar("Agenda resetada.")
         return True

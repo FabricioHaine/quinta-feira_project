@@ -1,0 +1,49 @@
+name: quinta_feira
+description: Quinta-Feira - Assistente IA Pessoal
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Reconhecimento de voz
+  speech_to_text: ^6.3.0
+  
+  # Síntese de voz (TTS)
+  flutter_tts: ^3.8.3
+  
+  # HTTP requests (para API Gemini)
+  http: ^1.1.0
+  
+  # Armazenamento local
+  shared_preferences: ^2.2.0
+  
+  # Ícones
+  cupertino_icons: ^1.0.6
+  
+  # Animações
+  flutter_animate: ^4.2.0
+  
+  # Permissions
+  permission_handler: ^11.0.0
+  
+  # URL launcher
+  url_launcher: ^6.1.14
+  
+  # Serviço de background
+  background_fetch: ^1.2.0
+  
+  # Wakelock (manter tela ativa)
+  wakelock_plus: ^1.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true

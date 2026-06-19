@@ -1,16 +1,15 @@
 """
-Módulo de Memória - QUINTA-FEIRA
-Refatorado para persistência na pasta local do projeto.
+Módulo de Memória - QINTA-FEIRA
+Versão 2.0: Memória contextual, histórico de conversas e aprendizado.
 """
 import json
 import os
+import datetime
 
-# Define o diretório base automaticamente para portabilidade
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class MemoriaAssistente:
     def __init__(self, nome_arquivo="memoria_quinta_feira.json"):
-        # Caminho dinâmico: o arquivo será salvo no mesmo diretório do script
         self.arquivo = os.path.join(BASE_DIR, nome_arquivo)
         self.dados = self.carregar_memoria()
 
@@ -36,3 +35,36 @@ class MemoriaAssistente:
 
     def recuperar(self, chave, padrao=None):
         return self.dados.get(chave, padrao)
+
+    def adicionar_historico(self, pergunta, resposta, intencao="CONVERSA_LIVRE"):
+        historico = self.recuperar("historico_completo", [])
+        historico.append({
+            "pergunta": pergunta,
+            "resposta": resposta,
+            "intencao": intencao,
+            "timestamp": datetime.datetime.now().isoformat()
+        })
+        if len(historico) > 100:
+            historico = historico[-100:]
+        self.lembrar("historico_completo", historico)
+
+    def obter_estatisticas(self):
+        historico = self.recuperar("historico_completo", [])
+        if not historico:
+            return {"total_interacoes": 0, "intencoes": {}}
+
+        intencoes = {}
+        for item in historico:
+            intencao = item.get("intencao", "DESCONHECIDA")
+            intencoes[intencao] = intencoes.get(intencao, 0) + 1
+
+        return {
+            "total_interacoes": len(historico),
+            "intencoes": intencoes,
+            "ultima_interacao": historico[-1].get("timestamp") if historico else None
+        }
+
+    def limpar_historico(self, manter_ultimas=10):
+        historico = self.recuperar("historico_completo", [])
+        if len(historico) > manter_ultimas:
+            self.lembrar("historico_completo", historico[-manter_ultimas:])
